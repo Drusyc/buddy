@@ -60,7 +60,16 @@ mem_init()
 void * 
 mem_alloc(unsigned long size)
 {
-  /*  ecrire votre code ici */
+
+  /*
+   * Bloc 8
+   *  -> bloc 6  -> TZL[subBuddy[actuel]]
+   *  -> bloc 2  -> TZL[actuel - 1]
+   */
+
+   
+
+  
   return 0;  
 }
 
