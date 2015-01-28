@@ -14,6 +14,7 @@
 void *zone_memoire = 0;
 
 /* ecrire votre code ici */
+unsigned int * size [40];
 
 int 
 mem_init()
@@ -26,12 +27,14 @@ mem_init()
       return -1;
     }
 
+  
+
   /* ecrire votre code ici */
 
   return 0;
 }
 
-void *
+void * 
 mem_alloc(unsigned long size)
 {
   /*  ecrire votre code ici */
