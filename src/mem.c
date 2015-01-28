@@ -28,6 +28,7 @@ mem_init()
       perror("mem_init:");
       return -1;
     }
+    
   /* ecrire notre code ici */  
   size[0] = 1;
   size[1] = 2;
@@ -39,11 +40,14 @@ mem_init()
           size[i] = 3*size[i-3];
       }
   }
- 
+  
   for(int i = 0; i < 39; i++) {
       tzl[i] = NULL;
   }
   tzl[39] = zone_memoire;
+  
+  /* initialization of first list : only 1 block, last element, points on null */
+  zone_memoire[0] = NULL;
   
   subBuddy[0] = -1;
   subBuddy[1] = -1;
@@ -53,11 +57,11 @@ mem_init()
   for(int i = 4 ; i <40; i++) {
       subBuddy[i] = 1 + 2 * (i-3)/2;
   }
-  
+
   return 0;
 }
 
-void * 
+void *
 mem_alloc(unsigned long size)
 {
   /*  ecrire votre code ici */
