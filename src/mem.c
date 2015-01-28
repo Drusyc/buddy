@@ -39,7 +39,21 @@ mem_init()
           size[i] = 3*size[i-3];
       }
   }
-
+ 
+  for(int i = 0; i < 39; i++) {
+      tzl[i] = NULL;
+  }
+  tzl[39] = zone_memoire;
+  
+  subBuddy[0] = -1;
+  subBuddy[1] = -1;
+  subBuddy[2] = 0;
+  subBuddy[3] = 0;
+  /* preuve de la formule laissée au lecteur */
+  for(int i = 4 ; i <40; i++) {
+      subBuddy[i] = 1 + 2 * (i-3)/2;
+  }
+  
   return 0;
 }
 
