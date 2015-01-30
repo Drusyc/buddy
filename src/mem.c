@@ -12,7 +12,7 @@
 
 /** squelette du TP allocateur memoire */
 
-void *zone_memoire = 0;
+void * zone_memoire = 0;
 
 /* ecrire votre code ici */
 void * tzl[WBUDDY_MAX_INDEX];
@@ -48,7 +48,7 @@ mem_init()
     tzl[WBUDDY_MAX_INDEX -1] = zone_memoire;
     
     /* initialization of first list : only 1 block, last element, points on null */
-    *(void **) zone_memoire = NULL;
+    * (void **) tzl[WBUDDY_MAX_INDEX -1] = NULL;
     
     subBuddy[0] = -1;
     subBuddy[1] = -1;
@@ -56,7 +56,8 @@ mem_init()
     subBuddy[3] = 0;
     /* preuve de la formule laissée au lecteur */
     for(int i = 4 ; i <WBUDDY_MAX_INDEX; i++) {
-        subBuddy[i] = 1 + 2 * (i-3)/2;
+        subBuddy[i] = 2 * (i / 2) -3;
+        printf("%i ", subBuddy[i]);
     }
     
     return 0;
@@ -66,11 +67,16 @@ void decoupe(unsigned int index_zone) {
     // TODO refuser de découper 2 et 1
     // On suppose qu'on ne demande jamais de découper une zone inexistante ; tzl[index_zone] existe et est non nulle
     void * zone_a_decouper = tzl[index_zone];
-    //tzl[index_zone] = tzl[index_zone][0];
+    tzl[index_zone] = * (void **) tzl[index_zone];
+    if(tzl[WBUDDY_MAX_INDEX -1] == NULL) {
+        printf("Yo c'est null\n");
+    } else {
+        printf("%p", tzl[WBUDDY_MAX_INDEX -1]);
+    }
     void * large_new_zone = zone_a_decouper + sizeArray[subBuddy[index_zone]];
-    //large_new_zone[0] = tzl[index_zone -1];
+    * (void **) large_new_zone = (void **) tzl[index_zone -1];
     tzl[index_zone -1] = large_new_zone;
-    //zone_a_decouper[0] = tzl[subBuddy[index_zone]];
+    * (void **) zone_a_decouper = (void **) tzl[subBuddy[index_zone]];
     tzl[subBuddy[index_zone]] = zone_a_decouper;
 }
 
@@ -90,6 +96,7 @@ mem_alloc(unsigned long size)
         if(sizeArray[i] >= size) {
             if(tzl[i] != NULL) {
                 smallest_zone = i;
+                printf("smallest_zone = %i\n",smallest_zone);
                 break;
             }
         }
@@ -103,9 +110,10 @@ mem_alloc(unsigned long size)
     bool found_smallest = false;
     while(!found_smallest) {
         
-        unsigned int currentSize = sizeArray[smallest_zone];
+        unsigned int currentSize = smallest_zone;
+        printf("currentSize = %i\n",currentSize);
         
-        if(sizeArray[currentSize -1] > size) {
+        if(sizeArray[currentSize -1] < size) {
             found_smallest = true;
         } else if (sizeArray[subBuddy[currentSize]] < size) {
             decoupe(smallest_zone);
@@ -117,7 +125,7 @@ mem_alloc(unsigned long size)
     }
     
     void * tmp = tzl[smallest_zone];
-    //tzl[smallest_zone] = tmp[0];
+    tzl[smallest_zone] = * (void **) tmp;
     
     return tmp;
 }
