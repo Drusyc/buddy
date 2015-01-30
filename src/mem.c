@@ -48,7 +48,7 @@ mem_init()
     tzl[WBUDDY_MAX_INDEX -1] = zone_memoire;
     
     /* initialization of first list : only 1 block, last element, points on null */
-    zone_memoire[0] = NULL;
+    *(void **) zone_memoire = NULL;
     
     subBuddy[0] = -1;
     subBuddy[1] = -1;
@@ -66,11 +66,11 @@ void decoupe(unsigned int index_zone) {
     // TODO refuser de découper 2 et 1
     // On suppose qu'on ne demande jamais de découper une zone inexistante ; tzl[index_zone] existe et est non nulle
     void * zone_a_decouper = tzl[index_zone];
-    tzl[index_zone] = tzl[index_zone][0];
+    //tzl[index_zone] = tzl[index_zone][0];
     void * large_new_zone = zone_a_decouper + sizeArray[subBuddy[index_zone]];
-    large_new_zone[0] = tzl[index_zone -1];
+    //large_new_zone[0] = tzl[index_zone -1];
     tzl[index_zone -1] = large_new_zone;
-    zone_a_decouper[0] = tzl[subBuddy[index_zone]];
+    //zone_a_decouper[0] = tzl[subBuddy[index_zone]];
     tzl[subBuddy[index_zone]] = zone_a_decouper;
 }
 
@@ -117,7 +117,7 @@ mem_alloc(unsigned long size)
     }
     
     void * tmp = tzl[smallest_zone];
-    tzl[smallest_zone] = tmp[0];
+    //tzl[smallest_zone] = tmp[0];
     
     return tmp;
 }
