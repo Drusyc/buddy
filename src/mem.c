@@ -95,6 +95,7 @@ mem_alloc(unsigned long size)
     }
 
 
+    printf("Taille alloué : %lu\n", size);
     unsigned int smallest_zone = -1;
     
     // s'il reste à -1, pas de zone qui correspond, crash
@@ -118,7 +119,7 @@ mem_alloc(unsigned long size)
     while(!found_smallest) {
         
         unsigned int currentSize = smallest_zone;
-        //printf("currentSize = %i\n",currentSize);
+        printf("currentSize = %i\n",currentSize);
 
         if(currentSize <= 7 || sizeArray[currentSize -1] < size ) {
             found_smallest = true;
@@ -134,6 +135,7 @@ mem_alloc(unsigned long size)
     void * tmp = tzl[smallest_zone];
     tzl[smallest_zone] = * (void **) tmp;
 
+    printf ("Bloc alloué %p\nDe taille : %i\n",tmp, sizeArray[smallest_zone]);
     return tmp;
 }
 
@@ -172,6 +174,7 @@ int
 mem_free(void *ptr, unsigned long size)
 {
         
+    printf("Taille libéré : %lu\n", size);
     //vérif
     if (ptr < zone_memoire || 
             ptr > zone_memoire + sizeArray[WBUDDY_MAX_INDEX-1]) {
@@ -184,10 +187,12 @@ mem_free(void *ptr, unsigned long size)
     unsigned int i = 0;
     //printf ("mem_free en entrée : ptr = %p\n de size %lu\n", ptr, size);
 
-    if (size < 8) {
+    if (size <= 8) {
+        // either 8 or 16
         size = 8;
-    } 
-    else {
+    } else if (size <= 16) {
+        size = 16;
+    } else {
         while (i < WBUDDY_MAX_INDEX && sizeArray[i] < size) i++;
         size = sizeArray[i];
     }
@@ -201,13 +206,16 @@ mem_free(void *ptr, unsigned long size)
             break;
 
         //rechercher buddy
+
+        printf ("pré_recherche_buddy : size = %lu\n ptr = %p\n",
+                size, ptr);
         recherche_buddy(ptr, size, &buddysize, &adr_buddy);
         printf ("post_recherche_buddy : buddysize = %u\n adr_buddy = %p\n",
                 buddysize, adr_buddy);
         
         //recherche buddy dans TZL
         i = 0;
-        while (i < WBUDDY_MAX_INDEX && sizeArray[i] != buddysize) i++;
+        while (i < WBUDDY_MAX_INDEX && sizeArray[i] < buddysize) i++;
 
         void * adr_prec = NULL;
         void * adr_cour = tzl[i];
@@ -215,30 +223,24 @@ mem_free(void *ptr, unsigned long size)
             adr_prec = adr_cour;
             adr_cour = *(void **) adr_cour;
         }
-        printf("adr_prec %p\nadr_cour %p\n", adr_prec, adr_cour);
+        //printf("adr_prec %p\nadr_cour %p\n", adr_prec, adr_cour);
 
         if (adr_cour != NULL) {
             //buddy retrouvé, go le déchainer
             if (adr_cour == tzl[i]) {
-                if (tzl[i] == *(void **) adr_cour) 
-                    printf("couille dans le pâté !\n");
                 tzl[i] = * (void **) adr_cour;
             }
             else {
-                if (* (void **) adr_prec == *(void **) adr_cour) 
-                    printf("couille dans le gigot !\n");
                 * (void **) adr_prec = * (void **) adr_cour;
             }
             * (void **) adr_cour = NULL;
+            //recomposition
+            ptr = ptr < adr_buddy?ptr:adr_buddy;
+            size = size + buddysize;
         } 
         else {
             is_buddy_found = false;
         }
-        
-        //recomposition
-        ptr = ptr < adr_buddy?ptr:adr_buddy;
-        size = size + buddysize;
-
     }
 
     i = 0;
@@ -246,15 +248,9 @@ mem_free(void *ptr, unsigned long size)
     //printf ("i le fourbe : %u\n", i);
 
     //réinsère dans la tzl le bloc libéré
-    printf ("\n\nmem_free : ptr = %p\n avec size = %lu\n", ptr, size);
+    //printf ("\n\nmem_free : ptr = %p\n avec size = %lu\n", ptr, size);
     void * tmp = tzl[i];
     * (void **) ptr = tmp;
-
-    if (tzl[i] == ptr) {
-        printf("couille dans les pâtes !\n");
-
-    }
-
     tzl[i] = ptr;
 
     return 0;
