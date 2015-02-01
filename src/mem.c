@@ -64,12 +64,12 @@ mem_init()
 }
 
 void decoupe(unsigned int index_zone) {
-    // TODO refuser de découper 2 et 1
+    // Refuser de découper 2 et 1
     // On suppose qu'on ne demande jamais de découper une zone inexistante ; tzl[index_zone] existe et est non nulle
     void * zone_a_decouper = tzl[index_zone];
     tzl[index_zone] = * (void **) tzl[index_zone];
     if(tzl[WBUDDY_MAX_INDEX -1] == NULL) {
-        printf("Yo c'est null\n");
+        //printf("Yo c'est null\n");
     } else {
         printf("%p", tzl[WBUDDY_MAX_INDEX -1]);
     }
@@ -83,6 +83,7 @@ void decoupe(unsigned int index_zone) {
 void *
 mem_alloc(unsigned long size)
 {
+    //TODO vérifier si init a bien été appelé, ie. zone_memoire a reçu son malloc
     
     // 1°) on regarde s'il reste au moins 1 zone libre de taille >= size. Si c'est pas le cas, fail
     // 2°) On trouve la plus petite zone libre qui vérifie la condition 1°)
@@ -96,7 +97,7 @@ mem_alloc(unsigned long size)
         if(sizeArray[i] >= size) {
             if(tzl[i] != NULL) {
                 smallest_zone = i;
-                printf("smallest_zone = %i\n",smallest_zone);
+                //printf("smallest_zone = %i\n",smallest_zone);
                 break;
             }
         }
@@ -111,9 +112,11 @@ mem_alloc(unsigned long size)
     while(!found_smallest) {
         
         unsigned int currentSize = smallest_zone;
-        printf("currentSize = %i\n",currentSize);
-        
-        if(sizeArray[currentSize -1] < size) {
+        //printf("currentSize = %i\n",currentSize);
+
+       
+        //TODO if 1 ?
+        if(currentSize == 0 || sizeArray[currentSize -1] < size ) {
             found_smallest = true;
         } else if (sizeArray[subBuddy[currentSize]] < size) {
             decoupe(smallest_zone);
@@ -130,10 +133,81 @@ mem_alloc(unsigned long size)
     return tmp;
 }
 
+
+void recherche_buddy (void *ptr, unsigned long size, 
+                        unsigned int *buddysize, void* adr_buddy ) 
+{
+    unsigned int idx_cour = WBUDDY_MAX_INDEX - 1;
+    unsigned int idx_cible = 1;
+
+    while (sizeArray[idx_cible] != size) idx_cible++;
+    
+    void * min = zone_memoire;
+    void * max = zone_memoire + sizeArray[WBUDDY_MAX_INDEX - 1];
+
+    //recherche du buddy
+    while (idx_cour > idx_cible - 3) {
+        if (min == ptr && idx_cour == idx_cible) 
+            break;
+        if ((min + sizeArray[subBuddy[idx_cour]]) <= ptr) {
+            adr_buddy = min;
+            *buddysize = sizeArray[subBuddy[idx_cour]];
+            min += sizeArray[subBuddy[idx_cour]];
+            idx_cour += 1;
+        } 
+        else {
+            *buddysize = sizeArray[idx_cour - 1];
+            max = min + sizeArray[subBuddy[idx_cour]];
+            adr_buddy = max;
+            idx_cour = subBuddy[idx_cour];
+        }
+    }
+}
+
 int 
 mem_free(void *ptr, unsigned long size)
 {
-    /* ecrire votre code ici */
+        
+    unsigned int buddysize = 0;
+    void * adr_buddy = NULL;
+
+    //si buddy est dans TZL : fusion
+    //et on répète
+    
+    bool is_buddy_found = true;
+    while (is_buddy_found) {
+        //rechercher buddy
+        recherche_buddy(ptr, size, &buddysize, &adr_buddy);
+        
+        //recherche buddy dans TZL
+        unsigned int i = 0;
+        while (sizeArray[i] != buddysize) i++;
+
+        void * adr_prec = NULL;
+        void * adr_cour = tzl[i];
+        while (adr_cour != NULL && adr_cour != adr_buddy) {
+            adr_prec = adr_cour;
+            adr_cour = *(void **) adr_cour;
+        }
+
+        if (adr_cour != NULL) {
+            //buddy retrouvé, go le déchainer
+            if (adr_cour == tzl[i]) {
+                tzl[i] = * (void **) adr_cour;
+            }
+            else {
+                * (void **) adr_prec = * (void **) adr_cour;
+            }
+        } 
+        else {
+            is_buddy_found = false;
+        }
+        
+        //recomposition
+        ptr = ptr < adr_buddy?ptr:adr_buddy;
+        size = size + buddysize;
+    }
+
     return 0;
 }
 
