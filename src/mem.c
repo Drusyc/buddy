@@ -95,7 +95,7 @@ mem_alloc(unsigned long size)
     }
 
 
-    printf("Taille alloué : %lu\n", size);
+    //printf("Taille alloué : %lu\n", size);
     unsigned int smallest_zone = -1;
     
     // s'il reste à -1, pas de zone qui correspond, crash
@@ -119,7 +119,7 @@ mem_alloc(unsigned long size)
     while(!found_smallest) {
         
         unsigned int currentSize = smallest_zone;
-        printf("currentSize = %i\n",currentSize);
+        //printf("currentSize = %i\n",currentSize);
 
         if(currentSize <= 7 || sizeArray[currentSize -1] < size ) {
             found_smallest = true;
@@ -135,7 +135,7 @@ mem_alloc(unsigned long size)
     void * tmp = tzl[smallest_zone];
     tzl[smallest_zone] = * (void **) tmp;
 
-    printf ("Bloc alloué %p\nDe taille : %i\n",tmp, sizeArray[smallest_zone]);
+    //printf ("Bloc alloué %p\nDe taille : %i\n",tmp, sizeArray[smallest_zone]);
     return tmp;
 }
 
@@ -170,6 +170,32 @@ void recherche_buddy (void *ptr, unsigned long size,
     }
 }
 
+int
+on_retrieve_la_taille(void * ptr) 
+{
+    unsigned int idx_cour = WBUDDY_MAX_INDEX - 1;
+    void * min = zone_memoire;
+
+    //printf("\n\nRetrieve!\n");
+
+    while (idx_cour > 7) {
+        //printf("idx_cour = %i\n",idx_cour);
+        if ((min + sizeArray[subBuddy[idx_cour]]) <= ptr) {
+            idx_cour = idx_cour -1;
+            min = min + sizeArray[subBuddy[idx_cour]];
+        } 
+        else {
+            idx_cour = subBuddy[idx_cour];
+        }
+    }
+
+    if(idx_cour == 7) {
+        return 16;
+    } else {
+        return 8;
+    }
+}
+
 int 
 mem_free(void *ptr, unsigned long size)
 {
@@ -189,7 +215,8 @@ mem_free(void *ptr, unsigned long size)
 
     if (size <= 8) {
         // either 8 or 16
-        size = 8;
+        size = on_retrieve_la_taille(ptr);
+        printf("mem_free : retrieve_la_taille a trouvé => %lu\n", size);
     } else if (size <= 16) {
         size = 16;
     } else {
@@ -223,7 +250,7 @@ mem_free(void *ptr, unsigned long size)
             adr_prec = adr_cour;
             adr_cour = *(void **) adr_cour;
         }
-        //printf("adr_prec %p\nadr_cour %p\n", adr_prec, adr_cour);
+        printf("adr_prec %p\nadr_cour %p\n", adr_prec, adr_cour);
 
         if (adr_cour != NULL) {
             //buddy retrouvé, go le déchainer
