@@ -90,7 +90,6 @@ mem_alloc(unsigned long size)
     // 3°) S'il existe une taille (dans sizeArray, le tableau) qui est plus petite que la zone libre trouvée
     
     if (size < 1) {
-        /* smack a bitch(); */
         return (void *) 0;
     }
 
@@ -135,7 +134,7 @@ mem_alloc(unsigned long size)
     void * tmp = tzl[smallest_zone];
     tzl[smallest_zone] = * (void **) tmp;
 
-    //printf ("Bloc alloué %p\nDe taille : %i\n",tmp, sizeArray[smallest_zone]);
+    printf ("Bloc alloué %p\nDe taille : %i\n",tmp, sizeArray[smallest_zone]);
     return tmp;
 }
 
@@ -200,7 +199,7 @@ int
 mem_free(void *ptr, unsigned long size)
 {
         
-    printf("Taille libéré : %lu\n", size);
+    printf("Taille libérée : %lu\n", size);
     //vérif
     if (ptr < zone_memoire || 
             ptr > zone_memoire + sizeArray[WBUDDY_MAX_INDEX-1]) {
@@ -275,7 +274,7 @@ mem_free(void *ptr, unsigned long size)
     //printf ("i le fourbe : %u\n", i);
 
     //réinsère dans la tzl le bloc libéré
-    //printf ("\n\nmem_free : ptr = %p\n avec size = %lu\n", ptr, size);
+    printf ("\n\nmem_free : ptr = %p\n avec size = %lu\n", ptr, size);
     void * tmp = tzl[i];
     * (void **) ptr = tmp;
     tzl[i] = ptr;
