@@ -210,7 +210,7 @@ mem_free(void *ptr, unsigned long size)
 
     if (size <= 16) {
         // either 8 or 16 
-        size = on_retrieve_la_taille(ptr);
+        size = find_size(ptr);
     } else if (size <= 32) {
         size = 32;
     } else {
