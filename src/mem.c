@@ -10,11 +10,8 @@
 #include <assert.h>
 #include "mem.h"
 
-/** squelette du TP allocateur memoire */
-
 void * zone_memoire = 0;
 
-/* ecrire votre code ici */
 void * tzl[WBUDDY_MAX_INDEX];
 unsigned int sizeArray[WBUDDY_MAX_INDEX];
 int subBuddy[WBUDDY_MAX_INDEX];
@@ -30,7 +27,6 @@ mem_init()
         return -1;
     }
     
-    /* ecrire notre code ici */  
     sizeArray[0] = 1;
     sizeArray[1] = 2;
     sizeArray[2] = 3;
@@ -118,7 +114,6 @@ mem_alloc(unsigned long size)
     while(!found_smallest) {
         
         unsigned int currentSize = smallest_zone;
-        //printf("currentSize = %i\n",currentSize);
 
         if(currentSize <= 9 || sizeArray[currentSize -1] < size ) {
             found_smallest = true;
@@ -134,7 +129,6 @@ mem_alloc(unsigned long size)
     void * tmp = tzl[smallest_zone];
     tzl[smallest_zone] = * (void **) tmp;
 
-    printf ("Bloc alloué %p\nDe taille : %i\n",tmp, sizeArray[smallest_zone]);
     return tmp;
 }
 
@@ -150,7 +144,6 @@ void recherche_buddy (void *ptr, unsigned long size,
     void * min = zone_memoire;
     void * max = zone_memoire + sizeArray[WBUDDY_MAX_INDEX - 1];
 
-    //recherche du buddy
     while (idx_cour > idx_cible - 3) {
         if (min == ptr && idx_cour == idx_cible) 
             break;
@@ -169,13 +162,19 @@ void recherche_buddy (void *ptr, unsigned long size,
     }
 }
 
+
+/*
+ * Blocks of under size 16 can be either stored in
+ * blocks of size 16 or 32. So we retrace the splitting algorithm
+ * in order to find the blocks' size.
+ * Copyright 2015 Pierre Leboucher and Thomas Guntz
+ */
 int
-on_retrieve_la_taille(void * ptr) 
+find_size (void * ptr) 
 {
     unsigned int idx_cour = WBUDDY_MAX_INDEX - 1;
     void * min = zone_memoire;
 
-    //printf("\n\nRetrieve!\n");
         
     while (idx_cour > 9) {
         if ((min + sizeArray[subBuddy[idx_cour]]) <= ptr) {
@@ -198,8 +197,7 @@ int
 mem_free(void *ptr, unsigned long size)
 {
         
-    //printf("Taille libérée : %lu\n", size);
-    //vérif
+    //Precondition
     if (ptr < zone_memoire || 
             ptr > zone_memoire + sizeArray[WBUDDY_MAX_INDEX-1]) {
         perror ("Address out of bounds\n");
@@ -208,13 +206,11 @@ mem_free(void *ptr, unsigned long size)
 
     unsigned int buddysize = 0;
     void * adr_buddy = NULL;
-    unsigned int i = 0;
-    //printf ("mem_free en entrée : ptr = %p\n de size %lu\n", ptr, size);
+    unsigned int i = 0; //indice..
 
     if (size <= 16) {
         // either 8 or 16 
         size = on_retrieve_la_taille(ptr);
-        printf("mem_free : retrieve_la_taille a trouvé => %lu\n", size);
     } else if (size <= 32) {
         size = 32;
     } else {
@@ -222,21 +218,13 @@ mem_free(void *ptr, unsigned long size)
         size = sizeArray[i];
     }
 
-    //si buddy est dans TZL : fusion
-    //et on répète
-    
     bool is_buddy_found = true;
     while (is_buddy_found) {
         if (size == sizeArray[WBUDDY_MAX_INDEX - 1])
             break;
 
         //rechercher buddy
-
-        printf ("pré_recherche_buddy : size = %lu\n ptr = %p\n",
-                size, ptr);
         recherche_buddy(ptr, size, &buddysize, &adr_buddy);
-        printf ("post_recherche_buddy : buddysize = %u\n adr_buddy = %p\n",
-                buddysize, adr_buddy);
         
         //recherche buddy dans TZL
         i = 0;
@@ -248,7 +236,6 @@ mem_free(void *ptr, unsigned long size)
             adr_prec = adr_cour;
             adr_cour = *(void **) adr_cour;
         }
-        printf("adr_prec %p\nadr_cour %p\n", adr_prec, adr_cour);
 
         if (adr_cour != NULL) {
             //buddy retrouvé, go le déchainer
@@ -270,10 +257,8 @@ mem_free(void *ptr, unsigned long size)
 
     i = 0;
     while (sizeArray[i] != size) i++;
-    //printf ("i le fourbe : %u\n", i);
 
     //réinsère dans la tzl le bloc libéré
-    //printf ("\n\nmem_free : ptr = %p\n avec size = %lu\n", ptr, size);
     void * tmp = tzl[i];
     * (void **) ptr = tmp;
     tzl[i] = ptr;
@@ -285,8 +270,6 @@ mem_free(void *ptr, unsigned long size)
 int
 mem_destroy()
 {
-    /* ecrire votre code ici */
-    
     free(zone_memoire);
     zone_memoire = 0;
     return 0;
