@@ -120,7 +120,7 @@ mem_alloc(unsigned long size)
         unsigned int currentSize = smallest_zone;
         //printf("currentSize = %i\n",currentSize);
 
-        if(currentSize <= 7 || sizeArray[currentSize -1] < size ) {
+        if(currentSize <= 9 || sizeArray[currentSize -1] < size ) {
             found_smallest = true;
         } else if (sizeArray[subBuddy[currentSize]] < size) {
             decoupe(smallest_zone);
@@ -176,22 +176,21 @@ on_retrieve_la_taille(void * ptr)
     void * min = zone_memoire;
 
     //printf("\n\nRetrieve!\n");
-
-    while (idx_cour > 7) {
-        //printf("idx_cour = %i\n",idx_cour);
+        
+    while (idx_cour > 9) {
         if ((min + sizeArray[subBuddy[idx_cour]]) <= ptr) {
-            idx_cour = idx_cour -1;
             min = min + sizeArray[subBuddy[idx_cour]];
+            idx_cour = idx_cour -1;
         } 
         else {
             idx_cour = subBuddy[idx_cour];
         }
     }
 
-    if(idx_cour == 7) {
-        return 16;
+    if(idx_cour == 9) {
+        return 32;
     } else {
-        return 8;
+        return 16;
     }
 }
 
@@ -199,7 +198,7 @@ int
 mem_free(void *ptr, unsigned long size)
 {
         
-    printf("Taille libérée : %lu\n", size);
+    //printf("Taille libérée : %lu\n", size);
     //vérif
     if (ptr < zone_memoire || 
             ptr > zone_memoire + sizeArray[WBUDDY_MAX_INDEX-1]) {
@@ -212,12 +211,12 @@ mem_free(void *ptr, unsigned long size)
     unsigned int i = 0;
     //printf ("mem_free en entrée : ptr = %p\n de size %lu\n", ptr, size);
 
-    if (size <= 8) {
-        // either 8 or 16
+    if (size <= 16) {
+        // either 8 or 16 
         size = on_retrieve_la_taille(ptr);
         printf("mem_free : retrieve_la_taille a trouvé => %lu\n", size);
-    } else if (size <= 16) {
-        size = 16;
+    } else if (size <= 32) {
+        size = 32;
     } else {
         while (i < WBUDDY_MAX_INDEX && sizeArray[i] < size) i++;
         size = sizeArray[i];
@@ -274,7 +273,7 @@ mem_free(void *ptr, unsigned long size)
     //printf ("i le fourbe : %u\n", i);
 
     //réinsère dans la tzl le bloc libéré
-    printf ("\n\nmem_free : ptr = %p\n avec size = %lu\n", ptr, size);
+    //printf ("\n\nmem_free : ptr = %p\n avec size = %lu\n", ptr, size);
     void * tmp = tzl[i];
     * (void **) ptr = tmp;
     tzl[i] = ptr;
